@@ -7,11 +7,12 @@
  *                              id: '#xxx', //select元素的id,必填
  *                              name: 'xxx',//传递select描述的选项，会在select后面追加一个值的隐藏域，name是该值，value是select选中值描述【select后面存相同dom元素，则只修改value】，非必填
  *                              onChange: '', //额外change事件，非必填
+ *                              callback: '', //回调函数，请求完成后执行
  *                            }
  *  Example：
     var demo = new Selector();
     var selectors = [
-    {id: '#district_id',onChange: ''},
+    {id: '#district_id',onChange: '', callback: ''},
     {id: '#center_id',onChange: ''},
     {id: '#area_id',onChange: ''}
     ];
@@ -36,7 +37,7 @@
     }
     Selector.prototype = {
         construct: Selector,
-        default_change: function(self, _this, target, names) {
+        default_change: function(self, _this, target, names, callbacks) {
             var $this = $(self), id = $this.val(), tlen = target.length, index = $this.data('index');
             if (id) {
                 //默认回调函数
@@ -52,6 +53,10 @@
                             target.eq(si).html('<option value="">请选择</option>');
                         }
                         _this.append_remark($this, names);
+                        //是否需要执行回调函数
+                        if ($.isFunction(callbacks[index])) {
+                            callbacks[index](self);
+                        }
                     }
                 });
             } else {
@@ -110,7 +115,7 @@
          */
         render: function(selectors) {
             selectors = selectors || [];
-            var slen = selectors.length, ids = [], names = [], onChanges = [];
+            var slen = selectors.length, ids = [], names = [], onChanges = [], callbacks = [];
             if (!slen) {
                 return false;
             }
@@ -124,7 +129,7 @@
                 for (var i = 0; i < tlen; i++) {
                     target.eq(i).data('index', i);
                     target.eq(i).on('change', function() {
-                        _this.default_change(this, _this, target, names);
+                        _this.default_change(this, _this, target, names, callbacks);
                         //附加回调函数
                         if ($.isFunction(onChanges[$(this).data('index')])) {
                             onChanges[$(this).data('index')]();
